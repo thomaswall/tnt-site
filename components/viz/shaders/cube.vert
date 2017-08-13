@@ -15,6 +15,7 @@ attribute vec2 uv2;
 
 uniform vec4 _color;
 uniform float time;
+uniform vec3 mice[50];
 
 const float PI = 3.1415926535897932384626433832795;
 const float PI_2 = 1.57079632679489661923;
@@ -30,7 +31,14 @@ void main() {
 	_position = position;
 	_uv = uv;
 
-	perturbed = position + vec3(0., 0., cos(time / 10.0 / 5.0 * distance(vec3(0., 0., 0.), vec3(position.xy, 0.))));
+	float d = 0.0;
+
+	for(int i = 0 ; i < 50; i ++) {
+		if((time - position.z) / 50.0 > 0)
+			d += distance(mice[i], vec3(position.xy, 0.)) / 50.0;
+	}
+
+	perturbed = position + vec3(0., 0., cos(time / 50.0 - d * 100.0));
 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
 }

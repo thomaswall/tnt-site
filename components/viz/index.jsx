@@ -10,6 +10,7 @@ let dt;
 let spin = false;
 let plane_geo = new THREE.BufferGeometry();
 let mesh;
+let mice = [];
 
 export default class Viz extends Component {
 
@@ -38,8 +39,9 @@ export default class Viz extends Component {
     scene.fog = new THREE.FogExp2(0xffffff, 0.001);
 
     camera = new THREE.PerspectiveCamera(45, 1, 0.1, 3000);
+    //camera = new THREE.OrthographicCamera(-1, 1, -1, 1, 0.1, 3000);
     //camera.position.set(300, 60, 300).normalize().multiplyScalar(1000);
-    camera.position.set(0.0, 0.0, 1.5);
+    camera.position.set(0.0, 0.0, 1.1);
     let vertices = new Float32Array(3 * 2000 * 2000 * 6);
     let index = 0;
     for(let i = 0; i < 2000; i ++) {
@@ -82,6 +84,10 @@ export default class Viz extends Component {
       }
     }
 
+    for(let i = 0; i < 50; i ++) {
+      mice.push(new THREE.Vector3());
+    }
+
     plane_geo.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
 
     const material = new THREE.ShaderMaterial({
@@ -90,7 +96,8 @@ export default class Viz extends Component {
         vertexColors: THREE.FaceColors,
         uniforms: {
           time: { value: 0.0 },
-          _color: new THREE.Uniform(constants.colors[2])
+          _color: new THREE.Uniform(constants.colors[2]),
+          mice: { type: 'v3v', value: mice }
         }
       })
 
@@ -102,12 +109,27 @@ export default class Viz extends Component {
   animate = () => {
 
     mesh.material.uniforms.time.value += Date.now() - last_time;
+    mesh.material.uniforms.mice.value = mice;
     //mesh.rotation.y = Math.PI / 2.0;
     //mesh.position.z = -2;
     last_time = Date.now();
 
     renderer.render( scene, camera );
     requestAnimationFrame( this.animate );
+  }
+
+  onMove = evt => {
+    console.log(evt)
+    let mouse = new THREE.Vector3();
+    mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
+    mouse.y = -(evt.pageY / window.innerHeight) * 2 + 1;
+    mouse.z = Date.now();
+    mice.unshift(mouse);
+    mice.pop();
+  }
+
+  componentWillMount = () => {
+    window.addEventListener('mousemove', this.onMove);
   }
 
 

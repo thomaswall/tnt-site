@@ -12,5 +12,5 @@ varying vec2 _uv;
 
 void main() {
 
-	gl_FragColor = vec4(_color.xyz + perturbed.z / 10.0, 1.0);
+	gl_FragColor = vec4(_color.xyz + perturbed.z / 20.0, 1.0);
 }
