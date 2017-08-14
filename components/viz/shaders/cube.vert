@@ -32,13 +32,15 @@ void main() {
 	_uv = uv;
 
 	float d = 0.0;
+	float wave_duration = 2.0;
 
 	for(int i = 0 ; i < 50; i ++) {
-		if((time - position.z) / 50.0 > 0)
-			d += distance(mice[i], vec3(position.xy, 0.)) / 50.0;
+		float time_since_start = ((time - mice[i].z) - distance(vec3(mice[i].xy, 0.), vec3(position.xy, 0.)) * wave_duration) / 10.0;
+		if(time_since_start > 0.0 && time_since_start < PI)
+			d += time_since_start / 50.0;
 	}
 
-	perturbed = position + vec3(0., 0., cos(time / 50.0 - d * 100.0));
+	perturbed = position + vec3(0., 0., cos(d * 1000.0));
 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
 }

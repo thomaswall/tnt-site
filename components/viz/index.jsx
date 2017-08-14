@@ -11,6 +11,8 @@ let spin = false;
 let plane_geo = new THREE.BufferGeometry();
 let mesh;
 let mice = [];
+let ticks = 0;
+let debounce = 0;
 
 export default class Viz extends Component {
 
@@ -85,10 +87,11 @@ export default class Viz extends Component {
     }
 
     for(let i = 0; i < 50; i ++) {
-      mice.push(new THREE.Vector3());
+      mice.push(new THREE.Vector3(0.0, 0.0, ticks));
     }
 
     plane_geo.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    console.log(plane_geo)
 
     const material = new THREE.ShaderMaterial({
         vertexShader: cubevert,
@@ -107,8 +110,8 @@ export default class Viz extends Component {
 }
 
   animate = () => {
-
-    mesh.material.uniforms.time.value += Date.now() - last_time;
+    ticks += 1.0 / 60.0;
+    mesh.material.uniforms.time.value = ticks;
     mesh.material.uniforms.mice.value = mice;
     //mesh.rotation.y = Math.PI / 2.0;
     //mesh.position.z = -2;
@@ -119,13 +122,15 @@ export default class Viz extends Component {
   }
 
   onMove = evt => {
-    console.log(evt)
+    if(debounce % 3 == 0) {
     let mouse = new THREE.Vector3();
-    mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
-    mouse.y = -(evt.pageY / window.innerHeight) * 2 + 1;
-    mouse.z = Date.now();
-    mice.unshift(mouse);
-    mice.pop();
+      mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
+      mouse.y = -(evt.pageY / window.innerHeight) * 2 + 1;
+      mouse.z = ticks;
+      mice.unshift(mouse);
+      mice.pop();
+    }
+    debounce += 1;
   }
 
   componentWillMount = () => {
