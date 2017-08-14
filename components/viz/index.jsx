@@ -122,7 +122,7 @@ export default class Viz extends Component {
   }
 
   onMove = evt => {
-    if(debounce % 3 == 0) {
+    if(debounce % 5 == 0) {
     let mouse = new THREE.Vector3();
       mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
       mouse.y = -(evt.pageY / window.innerHeight) * 2 + 1;

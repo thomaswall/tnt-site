@@ -11,7 +11,7 @@
     "type": "git",
     "url": "github.ibm.com/watson-prototypes/deez-baits-frontend"
   },
-  "author": "Watson Prototypes",
+  "author": "Tom Wall",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.12.0",
