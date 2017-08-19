@@ -1,0 +1,24 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.container .info {
+    color: black;
+    font-family: 'Cutive Mono';
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 60%;
+    padding-top: 7%;
+    font-weight: bold;
+}
+
+.container .info .title {
+    font-size: 80px;
+}
+
+.container .info .descrip {
+    font-size: 30px;
+}

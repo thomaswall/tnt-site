@@ -4,6 +4,7 @@ import * as constants from './constants.js';
 import cubevert from './shaders/cube.vert';
 import cubefrag from './shaders/cube.frag';
 import Simulator from './simulate.js';
+import './style.css';
 
 let scene, camera, renderer, control;
 let last_time = Date.now();
@@ -19,8 +20,11 @@ export default class Viz extends Component {
 
   constructor(props) {
       super(props);
-      this.init();
-      this.animate();
+  }
+
+  componentDidMount = () => {
+    this.init();
+    this.animate();
   }
 
   init = () => {
@@ -39,7 +43,7 @@ export default class Viz extends Component {
     this.simulate = new Simulator(renderer, 0.4, 0.4);
 
     //renderer.setClearColor("#343434");
-    document.body.appendChild(renderer.domElement);
+    document.getElementById('container').appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0xffffff, 0.001);
@@ -49,46 +53,46 @@ export default class Viz extends Component {
     //camera.position.set(300, 60, 300).normalize().multiplyScalar(1000);
     camera.position.set(0.0, 0.0, 2.1);
     let vertices = new Float32Array(3 * 2000 * 2000 * 6);
-    let index = 0;
-    for(let i = 0; i < 2000; i ++) {
-      for(let j = 0; j < 2000; j ++) {
-        vertices[index] = -1.0 + i / 1000.0;
-        vertices[index+1] = -1.0 + j / 1000.0;
-        vertices[index+2] = 0.0;
+    // let index = 0;
+    // for(let i = 0; i < 2000; i ++) {
+    //   for(let j = 0; j < 2000; j ++) {
+    //     vertices[index] = -1.0 + i / 1000.0;
+    //     vertices[index+1] = -1.0 + j / 1000.0;
+    //     vertices[index+2] = 0.0;
 
-        index += 3;
+    //     index += 3;
 
-        vertices[index] = -1.0 + (i + 1) / 1000.0;
-        vertices[index+1] = -1.0 + j / 1000.0;
-        vertices[index+2] = 0.0;
+    //     vertices[index] = -1.0 + (i + 1) / 1000.0;
+    //     vertices[index+1] = -1.0 + j / 1000.0;
+    //     vertices[index+2] = 0.0;
 
-        index += 3;
+    //     index += 3;
 
-        vertices[index] = -1.0 + (i + 1) / 1000.0;
-        vertices[index+1] = -1.0 + (j + 1) / 1000.0;
-        vertices[index+2] = 0.0;
+    //     vertices[index] = -1.0 + (i + 1) / 1000.0;
+    //     vertices[index+1] = -1.0 + (j + 1) / 1000.0;
+    //     vertices[index+2] = 0.0;
 
-        index += 3;
+    //     index += 3;
 
-        vertices[index] = -1.0 + (i + 1) / 1000.0;
-        vertices[index+1] = -1.0 + (j + 1) / 1000.0;
-        vertices[index+2] = 0.0;
+    //     vertices[index] = -1.0 + (i + 1) / 1000.0;
+    //     vertices[index+1] = -1.0 + (j + 1) / 1000.0;
+    //     vertices[index+2] = 0.0;
 
-        index += 3;
+    //     index += 3;
 
-        vertices[index] = -1.0 + i / 1000.0;
-        vertices[index+1] = -1.0 + (j + 1) / 1000.0;
-        vertices[index+2] = 0.0;
+    //     vertices[index] = -1.0 + i / 1000.0;
+    //     vertices[index+1] = -1.0 + (j + 1) / 1000.0;
+    //     vertices[index+2] = 0.0;
 
-        index += 3;
+    //     index += 3;
 
-        vertices[index] = -1.0 + i / 1000.0;
-        vertices[index+1] = -1.0 + j / 1000.0;
-        vertices[index+2] = 0.0;
+    //     vertices[index] = -1.0 + i / 1000.0;
+    //     vertices[index+1] = -1.0 + j / 1000.0;
+    //     vertices[index+2] = 0.0;
 
-        index += 3;
-      }
-    }
+    //     index += 3;
+    //   }
+    // }
 
     for(let i = 0; i < 50; i ++) {
       mice.push(new THREE.Vector3(0.5, 0.5, ticks));
@@ -145,6 +149,14 @@ export default class Viz extends Component {
 
 
   render() {
-    return <div></div>;
+    return <div id='container' className='container'>
+        <div className='info'>
+          <div className='title'>tnt</div>
+          <div className='descrip'>youtube</div>
+          <div className='descrip'>about</div>
+          <div className='descrip'>instagram</div>
+          <div className='descrip'>linkedin</div>
+        </div>
+      </div>;
   }
 }
