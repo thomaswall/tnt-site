@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import THREE from 'three'
 import * as constants from './constants.js';
-import cubevert from './shaders/cube.vert'
-import cubefrag from './shaders/cube.frag'
+import cubevert from './shaders/cube.vert';
+import cubefrag from './shaders/cube.frag';
+import Simulator from './simulate.js';
 
 let scene, camera, renderer, control;
 let last_time = Date.now();
@@ -34,6 +35,9 @@ export default class Viz extends Component {
 
     window.onresize = () => renderer.setSize(window.innerWidth, window.innerHeight);
 
+
+    this.simulate = new Simulator(renderer, 0.4, 0.4);
+
     //renderer.setClearColor("#343434");
     document.body.appendChild(renderer.domElement);
 
@@ -43,7 +47,7 @@ export default class Viz extends Component {
     camera = new THREE.PerspectiveCamera(45, 1, 0.1, 3000);
     //camera = new THREE.OrthographicCamera(-1, 1, -1, 1, 0.1, 3000);
     //camera.position.set(300, 60, 300).normalize().multiplyScalar(1000);
-    camera.position.set(0.0, 0.0, 1.1);
+    camera.position.set(0.0, 0.0, 2.1);
     let vertices = new Float32Array(3 * 2000 * 2000 * 6);
     let index = 0;
     for(let i = 0; i < 2000; i ++) {
@@ -87,24 +91,23 @@ export default class Viz extends Component {
     }
 
     for(let i = 0; i < 50; i ++) {
-      mice.push(new THREE.Vector3(0.0, 0.0, ticks));
+      mice.push(new THREE.Vector3(0.5, 0.5, ticks));
     }
 
     plane_geo.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    console.log(plane_geo)
 
     const material = new THREE.ShaderMaterial({
         vertexShader: cubevert,
         fragmentShader: cubefrag,
-        vertexColors: THREE.FaceColors,
         uniforms: {
           time: { value: 0.0 },
           _color: new THREE.Uniform(constants.colors[2]),
-          mice: { type: 'v3v', value: mice }
+          mice: { type: 'v3v', value: mice },
+          tex: {type: 't', value:this.newTexture}
         }
       })
 
-    mesh = new THREE.Mesh( plane_geo, material );
+    mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry(2, 2), material );
 
     scene.add(mesh);
 }
@@ -115,6 +118,8 @@ export default class Viz extends Component {
     mesh.material.uniforms.mice.value = mice;
     //mesh.rotation.y = Math.PI / 2.0;
     //mesh.position.z = -2;
+    this.simulate.update(Date.now() - last_time);
+    mesh.material.uniforms.tex.value = this.simulate.simulation.positionRenderTarget.texture;
     last_time = Date.now();
 
     renderer.render( scene, camera );
@@ -124,8 +129,8 @@ export default class Viz extends Component {
   onMove = evt => {
     if(debounce % 5 == 0) {
     let mouse = new THREE.Vector3();
-      mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
-      mouse.y = -(evt.pageY / window.innerHeight) * 2 + 1;
+      mouse.x = (evt.pageX / window.innerWidth);
+      mouse.y = (evt.pageY / window.innerHeight);
       mouse.z = ticks;
       mice.unshift(mouse);
       mice.pop();
