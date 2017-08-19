@@ -118,6 +118,7 @@ export default class Viz extends Component {
     mesh.material.uniforms.mice.value = mice;
     //mesh.rotation.y = Math.PI / 2.0;
     //mesh.position.z = -2;
+    this.simulate.mice = mice;
     this.simulate.update(Date.now() - last_time);
     mesh.material.uniforms.tex.value = this.simulate.simulation.positionRenderTarget.texture;
     last_time = Date.now();
@@ -130,7 +131,7 @@ export default class Viz extends Component {
     if(debounce % 5 == 0) {
     let mouse = new THREE.Vector3();
       mouse.x = (evt.pageX / window.innerWidth);
-      mouse.y = (evt.pageY / window.innerHeight);
+      mouse.y = 1 - (evt.pageY / window.innerHeight);
       mouse.z = ticks;
       mice.unshift(mouse);
       mice.pop();

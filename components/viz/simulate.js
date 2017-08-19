@@ -1,4 +1,5 @@
 import THREE from 'three'
+import positionShade from './shaders/position.frag';
 
 
 let nullShade = `
@@ -10,77 +11,42 @@ void main() {
 let nullFrag = `
 uniform vec2 resolution;
 uniform sampler2D texture;
-vec3 permute (vec3 x) {
-    return mod(((x * 34.0) + 1.0) * x, 289.0);
+
+vec2 hash( vec2 p ) // replace this by something better
+{
+	p = vec2( dot(p,vec2(127.1,311.7)),
+			  dot(p,vec2(269.5,183.3)) );
+
+	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
 }
-vec3 taylorInvSqrt (vec3 r) {
-    return 1.79284291400159 - 0.85373472095314 * r;
-}
-float snoise(vec2 P) {
-    const vec2 C = vec2((3.0 - sqrt(3.0)) / 6.0, 0.5*(sqrt(3.0) - 1.0));
-    vec2 i = floor(P + dot(P, C.yy));
-    vec2 x0 = P - i + dot(i, C.xx);
-    vec2 i1;
-    i1.x = step(x0.y, x0.x);
-    i1.y = 1.0 - i1.x;
-    vec4 xor = x0.xyxy + vec4(C.xx, C.xx * 2.0 - 1.0);
-    xor.xy -= i1;
-    i = mod(i, 289.0);
-    vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
-    vec3 m = max(0.5 - vec3(dot(x0, x0), dot(xor.xy, xor.xy), dot(xor.zw, xor.zw)), 0.0);
-    m = m*m;
-    m = m*m;
-    vec3 x = fract(p * (1.0 / 41.0)) * 2.0 - 1.0;
-    vec3 gy = abs(x) - 0.5;
-    vec3 ox = floor(x + 0.5);
-    vec3 gx = x - ox;
-    m *- taylorInvSqrt(gx*gx + gy*gy);
-    vec3 g;
-    g.x = gx.x * x0.x + gy.x * x0.y;
-    g.yz = gx.yz + xor.xz + gy.yz * xor.yw;
-    return 130.0 * dot(m, g);
+
+
+float snoise( in vec2 p )
+{
+    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+
+	vec2 i = floor( p + (p.x+p.y)*K1 );
+	
+    vec2 a = p - i + (i.x+i.y)*K2;
+    vec2 o = step(a.yx,a.xy);    
+    vec2 b = a - o + K2;
+	vec2 c = a - 1.0 + 2.0*K2;
+
+    vec3 h = max( 0.5-vec3(dot(a,a), dot(b,b), dot(c,c) ), 0.0 );
+
+	vec3 n = h*h*h*h*vec3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+
+    return dot( n, vec3(70.0) );
+	
 }
 void main() {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
-    gl_FragColor = vec4(texture2D( texture, uv ).xyz * (0.8 + 0.2*snoise(gl_FragCoord.xy / vec2(2, 2))), 1.0);
+    vec2 vUv = gl_FragCoord.xy / resolution.xy;
+    vec3 rnd = vec3(snoise(16.0 * vUv + 1.1), snoise(16.0 * vUv + 2.2), snoise(16.0 * vUv + 3.3));
+    gl_FragColor = vec4(rnd, 1.0);
 }
 `;
-let positionShade = `
-uniform vec2 resolution;
-uniform sampler2D texture;
-uniform sampler2D base_texture;
-uniform float time;
-uniform float density;
-const mat3 colorShift = mat3( 1.0016374 ,  0.00332076, -0.00495827,
-       -0.00327048,  1.00033642,  0.00293016,
-       0.01252787, -0.01043093,  0.99792338);
-void main ()
-{
-  vec2 uvCoord = gl_FragCoord.xy / resolution.xy;
-  vec2 flow = vec2(-0.05, 0.0);
-  vec2 gauss1 = 0.5 + 0.4 * vec2(cos(0.27 * time / 3.0), sin(0.37 * time / 3.0));
-  gauss1 = uvCoord - gauss1;
-  gauss1 = 10.0 * vec2(1.0, -1.0) * gauss1.yx * exp(-40.0 * dot(gauss1, gauss1));
-  flow = flow + gauss1;
-  float pt = 0.1 - density * 0.1;
-  vec2 gauss2 = 0.5 + 0.4 * vec2(cos((0.27 - pt) * time / 3.0), sin((0.37 - pt)  * time / 3.0));
-  gauss2 = uvCoord - gauss2;
-  gauss2.x = mix(gauss2.x, gauss2.x - 1.0, step(abs(gauss2.x - 1.0), abs(gauss2.x)));
-  gauss2.x = mix(gauss2.x, gauss2.x + 1.0, step(abs(gauss2.x + 1.0), abs(gauss2.x)));
-  gauss2 = 10.0 * vec2(-1.0, 1.0) * gauss2.yx * exp(-40.0 * dot(gauss2, gauss2));
-  flow = flow + gauss2;
-  vec3 color = texture2D(texture, mod(uvCoord + 0.02 * flow, 1.0)).xyz;
-  float leftness = smoothstep(0.0, 0.15, length(uvCoord - vec2(0.5)));
-  vec3 base_color = texture2D(base_texture, vec2(mod(time / 20.0, 1.0), mod(time / 20.0, 1.0))).xyz * 1.5;
-  float left = 0.9 + 0.1 * leftness;
-  if(density > 0.6) {
-    base_color = texture2D(base_texture, uvCoord).xyz;
-    left = 0.0;
-  }
-  
-  gl_FragColor = vec4(mix(base_color, color, left), 1.0);
-}
-`;
+
 class Simulator {
     constructor(_renderer, density, temp) {
         this.textureDefaultPosition;
@@ -99,6 +65,10 @@ class Simulator {
         let rawShaderPrefix =  'precision ' + this.renderer.capabilities.precision + ' float;\n';
         this.scene = new THREE.Scene();
         this.camera.position.z = 1;
+
+        this.mice = [];
+
+
         this.copyShader = new THREE.RawShaderMaterial({
             uniforms: {
                 resolution: { type: 'v2', value: new THREE.Vector2(this.amountDim, this.amountDim )},
@@ -116,7 +86,8 @@ class Simulator {
                 texture: {type: 't', value: undefined},
                 base_texture: {type: 't', value: undefined},
                 time: {type: 'f', value: 0.0},
-                density: {type: 'f', value: density}
+                density: {type: 'f', value: density},
+                mice: { type: 'v3v', value: this.mice },
             },
             vertexShader: rawShaderPrefix + nullShade,
             fragmentShader: rawShaderPrefix + positionShade,
@@ -134,13 +105,6 @@ class Simulator {
             stencilBuffer: false
         });
         this.positionRenderTarget2 = this.positionRenderTarget.clone();
-        // this.newTexture = new THREE.TextureLoader().load(
-        //     "images/gas_giant.jpg", 
-        //     () => {
-        //         this.copyTexture(this.mesh, this.scene, this.newTexture, this.positionRenderTarget);
-        //         this.copyTexture(this.mesh, this.scene, this.positionRenderTarget.texture, this.positionRenderTarget2);
-        //         this.ready = true;
-        // });
             
         this.ready = true;
         this.newTexture = this.createTexture();
@@ -217,6 +181,7 @@ class Simulator {
         this.simulation.mesh.material = this.simulation.positionShader;
         this.simulation.positionShader.uniforms.base_texture.value = this.simulation.textureDefaultPosition;
         this.simulation.positionShader.uniforms.texture.value = this.simulation.positionRenderTarget2.texture;
+        this.simulation.positionShader.uniforms.mice.value = this.mice;
         this.simulation.positionShader.uniforms.time.value += dt * 0.001;
         this.renderer.render(this.simulation.scene, this.camera, this.simulation.positionRenderTarget);
     }

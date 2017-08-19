@@ -1,198 +1,139 @@
 uniform vec2 resolution;
-uniform sampler2D texturePosition;
-uniform sampler2D textureDefaultPosition;
+uniform sampler2D texture;
+uniform sampler2D base_texture;
 uniform float time;
-uniform float speed;
-uniform float dieSpeed;
-uniform float radius;
-uniform float curlSize;
-uniform float attraction;
-uniform float fire;
-uniform float initAnimation;
-uniform vec3 mouse3d;
-uniform vec3 otherSims[30];
+uniform float density;
+uniform vec3 mice[50];
 
-vec4 mod289(vec4 x) {
-    return x - floor(x * (1.0 / 289.0)) * 289.0;
+vec2 hash( vec2 p ) // replace this by something better
+{
+	p = vec2( dot(p,vec2(127.1,311.7)),
+			  dot(p,vec2(269.5,183.3)) );
+
+	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
 }
 
-float mod289(float x) {
-    return x - floor(x * (1.0 / 289.0)) * 289.0;
+vec2 normz(vec2 x) {
+	return x == vec2(0.0, 0.0) ? vec2(0.0, 0.0) : normalize(x);
 }
 
-vec4 permute(vec4 x) {
-    return mod289(((x*34.0)+1.0)*x);
-}
-
-float permute(float x) {
-    return mod289(((x*34.0)+1.0)*x);
-}
-
-vec4 taylorInvSqrt(vec4 r) {
-    return 1.79284291400159 - 0.85373472095314 * r;
-}
-
-float taylorInvSqrt(float r) {
-    return 1.79284291400159 - 0.85373472095314 * r;
-}
-
-vec4 grad4(float j, vec4 ip) {
-    const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
-    vec4 p,s;
-
-    p.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;
-    p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
-    s = vec4(lessThan(p, vec4(0.0)));
-    p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;
-
-    return p;
-}
-
-#define F4 0.309016994374947451
-
-vec4 snoise4 (vec4 v) {
-    const vec4  C = vec4( 0.138196601125011,0.276393202250021,0.414589803375032,-0.447213595499958);
-
-    vec4 i  = floor(v + dot(v, vec4(F4)) );
-    vec4 x0 = v -   i + dot(i, C.xxxx);
-
-    vec4 i0;
-    vec3 isX = step( x0.yzw, x0.xxx );
-    vec3 isYZ = step( x0.zww, x0.yyz );
-    i0.x = isX.x + isX.y + isX.z;
-    i0.yzw = 1.0 - isX;
-    i0.y += isYZ.x + isYZ.y;
-    i0.zw += 1.0 - isYZ.xy;
-    i0.z += isYZ.z;
-    i0.w += 1.0 - isYZ.z;
-
-    vec4 i3 = clamp( i0, 0.0, 1.0 );
-    vec4 i2 = clamp( i0-1.0, 0.0, 1.0 );
-    vec4 i1 = clamp( i0-2.0, 0.0, 1.0 );
-
-    vec4 x1 = x0 - i1 + C.xxxx;
-    vec4 x2 = x0 - i2 + C.yyyy;
-    vec4 x3 = x0 - i3 + C.zzzz;
-    vec4 x4 = x0 + C.wwww;
-
-    i = mod289(i);
-    float j0 = permute( permute( permute( permute(i.w) + i.z) + i.y) + i.x);
-    vec4 j1 = permute( permute( permute( permute (
-             i.w + vec4(i1.w, i2.w, i3.w, 1.0 ))
-           + i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))
-           + i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))
-           + i.x + vec4(i1.x, i2.x, i3.x, 1.0 ));
-
-
-    vec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;
-
-    vec4 p0 = grad4(j0,   ip);
-    vec4 p1 = grad4(j1.x, ip);
-    vec4 p2 = grad4(j1.y, ip);
-    vec4 p3 = grad4(j1.z, ip);
-    vec4 p4 = grad4(j1.w, ip);
-
-    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
-    p0 *= norm.x;
-    p1 *= norm.y;
-    p2 *= norm.z;
-    p3 *= norm.w;
-    p4 *= taylorInvSqrt(dot(p4,p4));
-
-    vec3 values0 = vec3(dot(p0, x0), dot(p1, x1), dot(p2, x2)); //value of contributions from each corner at point
-    vec2 values1 = vec2(dot(p3, x3), dot(p4, x4));
-
-    vec3 m0 = max(0.5 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0); //(0.5 - x^2) where x is the distance
-    vec2 m1 = max(0.5 - vec2(dot(x3,x3), dot(x4,x4)), 0.0);
-
-    vec3 temp0 = -6.0 * m0 * m0 * values0;
-    vec2 temp1 = -6.0 * m1 * m1 * values1;
-
-    vec3 mmm0 = m0 * m0 * m0;
-    vec2 mmm1 = m1 * m1 * m1;
-
-    float dx = temp0[0] * x0.x + temp0[1] * x1.x + temp0[2] * x2.x + temp1[0] * x3.x + temp1[1] * x4.x + mmm0[0] * p0.x + mmm0[1] * p1.x + mmm0[2] * p2.x + mmm1[0] * p3.x + mmm1[1] * p4.x;
-    float dy = temp0[0] * x0.y + temp0[1] * x1.y + temp0[2] * x2.y + temp1[0] * x3.y + temp1[1] * x4.y + mmm0[0] * p0.y + mmm0[1] * p1.y + mmm0[2] * p2.y + mmm1[0] * p3.y + mmm1[1] * p4.y;
-    float dz = temp0[0] * x0.z + temp0[1] * x1.z + temp0[2] * x2.z + temp1[0] * x3.z + temp1[1] * x4.z + mmm0[0] * p0.z + mmm0[1] * p1.z + mmm0[2] * p2.z + mmm1[0] * p3.z + mmm1[1] * p4.z;
-    float dw = temp0[0] * x0.w + temp0[1] * x1.w + temp0[2] * x2.w + temp1[0] * x3.w + temp1[1] * x4.w + mmm0[0] * p0.w + mmm0[1] * p1.w + mmm0[2] * p2.w + mmm1[0] * p3.w + mmm1[1] * p4.w;
-
-    return vec4(dx, dy, dz, dw) * 49.0;
-}
-
-vec3 curl( in vec3 p, in float noiseTime, in float persistence ) {
-
-    vec4 xNoisePotentialDerivatives = vec4(0.0);
-    vec4 yNoisePotentialDerivatives = vec4(0.0);
-    vec4 zNoisePotentialDerivatives = vec4(0.0);
-
-    for (int i = 0; i < 3; ++i) {
-
-        float twoPowI = pow(2.0, float(i));
-        float scale = 0.5 * twoPowI * pow(persistence, float(i));
-
-        xNoisePotentialDerivatives += snoise4(vec4(p * twoPowI, noiseTime)) * scale;
-        yNoisePotentialDerivatives += snoise4(vec4((p + vec3(123.4, 129845.6, -1239.1)) * twoPowI, noiseTime)) * scale;
-        zNoisePotentialDerivatives += snoise4(vec4((p + vec3(-9519.0, 9051.0, -123.0)) * twoPowI, noiseTime)) * scale;
-    }
-
-    return vec3(
-        zNoisePotentialDerivatives[1] - yNoisePotentialDerivatives[2],
-        xNoisePotentialDerivatives[2] - zNoisePotentialDerivatives[0],
-        yNoisePotentialDerivatives[0] - xNoisePotentialDerivatives[1]
-    );
-
-}
-
-void main() {
-
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
-
-    vec4 positionInfo = texture2D( texturePosition, uv );
-    vec3 position = mix(vec3(0.0, -200.0, 0.0), positionInfo.xyz, smoothstep(0.0, 0.3, initAnimation));
-    float life = positionInfo.a - dieSpeed;
-
-    vec3 currPos = mouse3d;
-    float dist = 100000000.0;
-
-    for(int i = 0; i < 10; i++) {
-        if(mouse3d.x != otherSims[i].x
-            && mouse3d.y != otherSims[i].y
-            && otherSims[i].x + otherSims[i].y + otherSims[i].z != 0.0
-            && distance(otherSims[i], position) < distance(mouse3d, position)
-            && distance(otherSims[i], currPos) < dist) {
-            dist = distance(otherSims[i], currPos);
-            currPos = otherSims[i];
-            //currPos += vec3(mouse3d.x, otherSims[i].y - mouse3d.y, mouse3d.z) / 9.0;
-        }
-    }
-
-    vec3 followPosition = mix(vec3(0.0, -(1.0 - initAnimation) * 200.0, 0.0), currPos, smoothstep(0.2, 0.7, initAnimation));
-
-
-    vec3 temp = position;
+// reverse advection
+vec3 advect(vec2 ab, vec2 vUv, vec2 step, float sc) {
     
-    if(life < 0.0) {
-        positionInfo = texture2D( textureDefaultPosition, uv );
-        position = positionInfo.xyz * (1.0 + sin(time * 15.0) * 0.2 + (1.0 - initAnimation)) * 0.4 * radius;
-        position += followPosition;
-        life = 0.5 + fract(positionInfo.w * 21.4131 + time);
-    } else {
-        vec3 delta = followPosition - position;
-        position += delta * (0.005 + life * 0.01) * attraction * (1.0 - smoothstep(50.0, 350.0, length(delta))) *speed;
-        position += curl(position * curlSize / 1.5, time, 0.1 + (1.0 - life) * 0.1) *speed / 2.0;
+    vec2 aUv = vUv - ab * sc * step;
+    
+    const float _G0 = 0.25; // center weight
+    const float _G1 = 0.125; // edge-neighbors
+    const float _G2 = 0.0625; // vertex-neighbors
+    
+    // 3x3 neighborhood coordinates
+    float step_x = step.x;
+    float step_y = step.y;
+    vec2 n  = vec2(0.0, step_y);
+    vec2 ne = vec2(step_x, step_y);
+    vec2 e  = vec2(step_x, 0.0);
+    vec2 se = vec2(step_x, -step_y);
+    vec2 s  = vec2(0.0, -step_y);
+    vec2 sw = vec2(-step_x, -step_y);
+    vec2 w  = vec2(-step_x, 0.0);
+    vec2 nw = vec2(-step_x, step_y);
 
-        //gaussian        
-        vec3 target = 0.5 + 0.4 * vec3(cos(0.24 * time), sin(0.31 * time), sin(0.3 * time));
-        if(fire > 0.0)
-            target = normalize(delta) - target;
-        else
-            target = normalize(position) - target;
-        target = 100.0 * vec3(-1.0, 1.0, 1.0) * target * exp(-1.0 * dot(target, target));
-        position += curl(target * curlSize, time, 0.1 + (1.0 - life) * 0.1) *speed / 2.0;
+    vec3 uv =    texture2D(texture, fract(aUv)).xyz;
+    vec3 uv_n =  texture2D(texture, fract(aUv+n)).xyz;
+    vec3 uv_e =  texture2D(texture, fract(aUv+e)).xyz;
+    vec3 uv_s =  texture2D(texture, fract(aUv+s)).xyz;
+    vec3 uv_w =  texture2D(texture, fract(aUv+w)).xyz;
+    vec3 uv_nw = texture2D(texture, fract(aUv+nw)).xyz;
+    vec3 uv_sw = texture2D(texture, fract(aUv+sw)).xyz;
+    vec3 uv_ne = texture2D(texture, fract(aUv+ne)).xyz;
+    vec3 uv_se = texture2D(texture, fract(aUv+se)).xyz;
+    
+    return _G0*uv + _G1*(uv_n + uv_e + uv_w + uv_s) + _G2*(uv_nw + uv_sw + uv_ne + uv_se);
+}
 
-        //position = temp;
+void main()
+{
+    const float _K0 = -20.0/6.0; // center weight
+    const float _K1 = 4.0/6.0;   // edge-neighbors
+    const float _K2 = 1.0/6.0;   // vertex-neighbors
+    const float cs = -0.6;  // curl scale
+    const float ls = 0.05;  // laplacian scale
+    const float ps = -0.8;  // laplacian of divergence scale
+    const float ds = -0.05; // divergence scale
+    const float dp = -0.04; // divergence update scale
+    const float pl = 0.3;   // divergence smoothing
+    const float ad = 6.0;   // advection distance scale
+    const float pwr = 1.0;  // power when deriving rotation angle from curl
+    const float amp = 1.0;  // self-amplification
+    const float upd = 0.8;  // update smoothing
+    const float sq2 = 0.6;  // diagonal weight
+
+    vec2 vUv = gl_FragCoord.xy / resolution.xy;
+    vec2 texel = 1. / resolution.xy;
+    
+    // 3x3 neighborhood coordinates
+    float step_x = texel.x;
+    float step_y = texel.y;
+    vec2 n  = vec2(0.0, step_y);
+    vec2 ne = vec2(step_x, step_y);
+    vec2 e  = vec2(step_x, 0.0);
+    vec2 se = vec2(step_x, -step_y);
+    vec2 s  = vec2(0.0, -step_y);
+    vec2 sw = vec2(-step_x, -step_y);
+    vec2 w  = vec2(-step_x, 0.0);
+    vec2 nw = vec2(-step_x, step_y);
+
+    vec3 uv =    texture2D(texture, fract(vUv)).xyz;
+    vec3 uv_n =  texture2D(texture, fract(vUv+n)).xyz;
+    vec3 uv_e =  texture2D(texture, fract(vUv+e)).xyz;
+    vec3 uv_s =  texture2D(texture, fract(vUv+s)).xyz;
+    vec3 uv_w =  texture2D(texture, fract(vUv+w)).xyz;
+    vec3 uv_nw = texture2D(texture, fract(vUv+nw)).xyz;
+    vec3 uv_sw = texture2D(texture, fract(vUv+sw)).xyz;
+    vec3 uv_ne = texture2D(texture, fract(vUv+ne)).xyz;
+    vec3 uv_se = texture2D(texture, fract(vUv+se)).xyz;
+    
+    // uv.x and uv.y are the x and y components, uv.z is divergence 
+
+    // laplacian of all components
+    vec3 lapl  = _K0*uv + _K1*(uv_n + uv_e + uv_w + uv_s) + _K2*(uv_nw + uv_sw + uv_ne + uv_se);
+    float sp = ps * lapl.z;
+    
+    // calculate curl
+    // vectors point clockwise about the center point
+    float curl = uv_n.x - uv_s.x - uv_e.y + uv_w.y + sq2 * (uv_nw.x + uv_nw.y + uv_ne.x - uv_ne.y + uv_sw.y - uv_sw.x - uv_se.y - uv_se.x);
+    
+    // compute angle of rotation from curl
+    float sc = cs * sign(curl) * pow(abs(curl), pwr);
+    
+    // calculate divergence
+    // vectors point inwards towards the center point
+    float div  = uv_s.y - uv_n.y - uv_e.x + uv_w.x + sq2 * (uv_nw.x - uv_nw.y - uv_ne.x - uv_ne.y + uv_sw.x + uv_sw.y + uv_se.y - uv_se.x);
+    float sd = uv.z + dp * div + pl * lapl.z;
+
+    vec2 norm = normz(uv.xy);
+    
+    vec3 ab = advect(vec2(uv.x, uv.y), vUv, texel, ad);
+    
+    // temp values for the update rule
+    float ta = amp * ab.x + ls * lapl.x + norm.x * sp + uv.x * ds * sd;
+    float tb = amp * ab.y + ls * lapl.y + norm.y * sp + uv.y * ds * sd;
+
+    // rotate
+    float a = ta * cos(sc) - tb * sin(sc);
+    float b = ta * sin(sc) + tb * cos(sc);
+    
+    vec3 abd = upd * uv + (1.0 - upd) * vec3(a,b,sd);
+    
+    for(int i = 0; i < 50; i++) {
+    	vec2 d = vUv - mice[i].xy;
+        float m = exp(-length(d) / 10.0);
+        abd.xy += 1. / 50. * m * normz(d) / 170.;
     }
 
-    gl_FragColor = vec4(position, life);
+
+        abd.z = clamp(abd.z, -1.0, 1.0);
+        abd.xy = clamp(length(abd.xy) > 1.0 ? normz(abd.xy) : abd.xy, -1.0, 1.0);
+        gl_FragColor = vec4(abd, 0.0);
 
 }
