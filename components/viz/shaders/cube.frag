@@ -26,7 +26,7 @@ void main() {
     vec3 norm = normalize(c);
     
     vec3 div = vec3(0.1) * norm.z;    
-    vec3 rbcol = vec3(0.45, 0.3, 0.2) + 0.2 * cross(norm.xyz, vec3(0.5, -0.1, 0.3));
+    vec3 rbcol = vec3(0.5, 0.35, 0.2) + 0.2 * cross(norm.xyz, vec3(0.5, -0.1, 0.3));
     
 	gl_FragColor = vec4(rbcol + div - d / 60.0, 1.0);
 }

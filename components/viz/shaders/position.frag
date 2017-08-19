@@ -53,17 +53,17 @@ vec3 advect(vec2 ab, vec2 vUv, vec2 step, float sc) {
 
 void main()
 {
-    const float _K0 = -20.0/6.0; // center weight
-    const float _K1 = 4.0/6.0;   // edge-neighbors
+    const float _K0 = -21.0/6.0; // center weight
+    const float _K1 = 3.5/6.0;   // edge-neighbors
     const float _K2 = 1.0/6.0;   // vertex-neighbors
-    const float cs = -0.6;  // curl scale
-    const float ls = 0.05;  // laplacian scale
-    const float ps = -0.8;  // laplacian of divergence scale
+    const float cs = -2.1;  // curl scale
+    const float ls = 0.02;  // laplacian scale
+    const float ps = -0.2;  // laplacian of divergence scale
     const float ds = -0.05; // divergence scale
     const float dp = -0.04; // divergence update scale
     const float pl = 0.3;   // divergence smoothing
     const float ad = 6.0;   // advection distance scale
-    const float pwr = 1.0;  // power when deriving rotation angle from curl
+    const float pwr = 0.8;  // power when deriving rotation angle from curl
     const float amp = 1.0;  // self-amplification
     const float upd = 0.8;  // update smoothing
     const float sq2 = 0.6;  // diagonal weight
