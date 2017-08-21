@@ -54,15 +54,15 @@ vec3 advect(vec2 ab, vec2 vUv, vec2 step, float sc) {
 void main()
 {
     const float _K0 = -21.0/6.0; // center weight
-    const float _K1 = 3.5/6.0;   // edge-neighbors
-    const float _K2 = 1.0/6.0;   // vertex-neighbors
+    const float _K1 = 1.5/6.0;   // edge-neighbors
+    const float _K2 = 3.5/6.0;   // vertex-neighbors
     const float cs = -2.1;  // curl scale
     const float ls = 0.02;  // laplacian scale
-    const float ps = -0.2;  // laplacian of divergence scale
-    const float ds = -0.05; // divergence scale
-    const float dp = -0.04; // divergence update scale
-    const float pl = 0.3;   // divergence smoothing
-    const float ad = 6.0;   // advection distance scale
+    const float ps = -0.05;  // laplacian of divergence scale
+    const float ds = -0.03; // divergence scale
+    const float dp = -0.08; // divergence update scale
+    const float pl = 0.8;   // divergence smoothing
+    const float ad = 9.0;   // advection distance scale
     const float pwr = 0.8;  // power when deriving rotation angle from curl
     const float amp = 1.0;  // self-amplification
     const float upd = 0.8;  // update smoothing
@@ -125,10 +125,10 @@ void main()
     
     vec3 abd = upd * uv + (1.0 - upd) * vec3(a,b,sd);
     
-    for(int i = 0; i < 50; i++) {
+    for(int i = 0; i < 5; i++) {
     	vec2 d = vUv - mice[i].xy;
         float m = exp(-length(d) / 10.0);
-        abd.xy += 1. / 50. * m * normz(d) / 170.;
+        abd.xy += 1. / 5. * m * normz(d) / 130.;
     }
 
 

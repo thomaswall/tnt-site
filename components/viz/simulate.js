@@ -52,7 +52,7 @@ class Simulator {
         this.textureDefaultPosition;
         this.renderer;
         this.copyShader;
-        this.amountDim = 500;
+        this.amountDim = 256;
         this.simulation;
         this.camera = new THREE.Camera();
         this.ready = false;
@@ -99,7 +99,7 @@ class Simulator {
         this.scene.add(this.mesh);
         this.positionRenderTarget = new THREE.WebGLRenderTarget(this.amountDim, this.amountDim, {
             format: THREE.RGBAFormat,
-            type: THREE.FloatType,
+            type: THREE.HalfFloatType,
             depthWrite: false,
             depthBuffer: false,
             stencilBuffer: false

@@ -1,8 +1,6 @@
 uniform vec4 _color;
 uniform sampler2D tex;
 
-varying vec3 _position;
-varying vec3 perturbed;
 varying vec2 _uv;
 uniform vec3 mice[50];
 uniform float time;
@@ -26,7 +24,12 @@ void main() {
     vec3 norm = normalize(c);
     
     vec3 div = vec3(0.1) * norm.z;    
-    vec3 rbcol = vec3(0.5, 0.35, 0.2) + 0.2 * cross(norm.xyz, vec3(0.5, -0.1, 0.3));
+    vec3 rbcol = vec3(0.5, 0.25, 0.2) + 0.2 * cross(norm.xyz, vec3(0.5, -0.1, 0.3));
+
+	vec3 col = rbcol + div - d / 300.0;
+	float gamma = 2.5;
+
+	float L = .2126 * pow(col.x, gamma) + 0.7152 * pow(col.y, gamma) + .0722 * pow(col.z, gamma);
     
-	gl_FragColor = vec4(rbcol + div - d / 60.0, 1.0);
+	gl_FragColor = vec4(vec3(L), 1.0);
 }

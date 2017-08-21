@@ -23,12 +23,8 @@ const float PI_4 = 0.785398163397448309616;
 
 varying vec2 _uv;
 
-varying vec3 _position;
-varying vec3 perturbed;
-
 void main() {
 
-	_position = position;
 	_uv = uv;
 
 	float d = 0.0;
@@ -41,7 +37,6 @@ void main() {
 		d += 1.0 / 50.0 * sin((2.0 * PI * distance(vec3(mice[i].xy, 0.), vec3(_uv, 0.)) - 2.0 * PI / wave_duration * (time - mice[i].z)) * 10.0);
 	}
 
-	perturbed = vec3(0., 0., d);
 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
 }

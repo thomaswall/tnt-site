@@ -15,11 +15,17 @@ let mesh;
 let mice = [];
 let ticks = 0;
 let debounce = 0;
+let raycaster;
+let spinTime = 0;
+let origRot = 0;
 
 export default class Viz extends Component {
 
   constructor(props) {
       super(props);
+      this.state = {
+        about: false
+      }
   }
 
   componentDidMount = () => {
@@ -51,54 +57,11 @@ export default class Viz extends Component {
     camera = new THREE.PerspectiveCamera(45, 1, 0.1, 3000);
     //camera = new THREE.OrthographicCamera(-1, 1, -1, 1, 0.1, 3000);
     //camera.position.set(300, 60, 300).normalize().multiplyScalar(1000);
-    camera.position.set(0.0, 0.0, 2.1);
-    let vertices = new Float32Array(3 * 2000 * 2000 * 6);
-    // let index = 0;
-    // for(let i = 0; i < 2000; i ++) {
-    //   for(let j = 0; j < 2000; j ++) {
-    //     vertices[index] = -1.0 + i / 1000.0;
-    //     vertices[index+1] = -1.0 + j / 1000.0;
-    //     vertices[index+2] = 0.0;
-
-    //     index += 3;
-
-    //     vertices[index] = -1.0 + (i + 1) / 1000.0;
-    //     vertices[index+1] = -1.0 + j / 1000.0;
-    //     vertices[index+2] = 0.0;
-
-    //     index += 3;
-
-    //     vertices[index] = -1.0 + (i + 1) / 1000.0;
-    //     vertices[index+1] = -1.0 + (j + 1) / 1000.0;
-    //     vertices[index+2] = 0.0;
-
-    //     index += 3;
-
-    //     vertices[index] = -1.0 + (i + 1) / 1000.0;
-    //     vertices[index+1] = -1.0 + (j + 1) / 1000.0;
-    //     vertices[index+2] = 0.0;
-
-    //     index += 3;
-
-    //     vertices[index] = -1.0 + i / 1000.0;
-    //     vertices[index+1] = -1.0 + (j + 1) / 1000.0;
-    //     vertices[index+2] = 0.0;
-
-    //     index += 3;
-
-    //     vertices[index] = -1.0 + i / 1000.0;
-    //     vertices[index+1] = -1.0 + j / 1000.0;
-    //     vertices[index+2] = 0.0;
-
-    //     index += 3;
-    //   }
-    // }
+    camera.position.set(0.0, 0.0, 3.3);
 
     for(let i = 0; i < 50; i ++) {
-      mice.push(new THREE.Vector3(0.5, 0.5, ticks));
+      mice.push(new THREE.Vector3(0.5 + (Math.random()*0.6 - 0.3), 0.5 + (Math.random()*0.6 - 0.3), ticks));
     }
-
-    plane_geo.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
 
     const material = new THREE.ShaderMaterial({
         vertexShader: cubevert,
@@ -114,6 +77,8 @@ export default class Viz extends Component {
     mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry(2, 2), material );
 
     scene.add(mesh);
+
+    raycaster = new THREE.Raycaster();
 }
 
   animate = () => {
@@ -127,35 +92,60 @@ export default class Viz extends Component {
     mesh.material.uniforms.tex.value = this.simulate.simulation.positionRenderTarget.texture;
     last_time = Date.now();
 
+    let time_since_spin = Date.now() - spinTime;
+
     renderer.render( scene, camera );
     requestAnimationFrame( this.animate );
   }
 
   onMove = evt => {
     if(debounce % 5 == 0) {
-    let mouse = new THREE.Vector3();
-      mouse.x = (evt.pageX / window.innerWidth);
-      mouse.y = 1 - (evt.pageY / window.innerHeight);
-      mouse.z = ticks;
-      mice.unshift(mouse);
-      mice.pop();
+        let mouse = new THREE.Vector3();
+        mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
+        mouse.y = (evt.pageY / window.innerHeight) * 2 - 1;
+        mouse.z = ticks;
+
+        raycaster.setFromCamera(new THREE.Vector2(mouse.x, mouse.y), camera);
+        let intersects = raycaster.intersectObject (mesh);
+
+        if(intersects.length > 0) {
+          let intersect = intersects[0];
+          mouse.x = intersect.uv.x;
+          mouse.y = 1.0 - intersect.uv.y;
+          mice.unshift(mouse);
+          mice.pop();
+        }
     }
     debounce += 1;
   }
 
   componentWillMount = () => {
     window.addEventListener('mousemove', this.onMove);
+    window.addEventListener('touchmove', this.onMove);
+    window.addEventListener('touchstart', this.onMove);
+  }
+
+  spinIt = () => {
+    spinTime = Date.now();
+    origRot = mesh.rotation.y;
+    this.state.about = !this.state.about;
+    this.setState(this.state);
   }
 
 
   render() {
+    console.log(this.state)
+    let showAbout = this.state.about ? {display: "flex"} : {display: "none"};
+
     return <div id='container' className='container'>
         <div className='info'>
           <div className='title'>tnt</div>
-          <div className='descrip'>youtube</div>
-          <div className='descrip'>about</div>
-          <div className='descrip'>instagram</div>
-          <div className='descrip'>linkedin</div>
+          <a className='descrip' onClick={this.spinIt}>about</a>
+          <a className='descrip'>vimeo</a>
+          <a className='descrip' href="https://www.instagram.com/disconeighbor/" >instagram</a>
+        </div>
+        <div className='about' style={showAbout}>
+          Interactive Digital Artists.
         </div>
       </div>;
   }
