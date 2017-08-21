@@ -27,7 +27,7 @@ void main() {
     vec3 rbcol = vec3(0.5, 0.25, 0.2) + 0.2 * cross(norm.xyz, vec3(0.5, -0.1, 0.3));
 
 	vec3 col = rbcol + div - d / 300.0;
-	float gamma = 2.5;
+	float gamma = 1.7;
 
 	float L = .2126 * pow(col.x, gamma) + 0.7152 * pow(col.y, gamma) + .0722 * pow(col.z, gamma);
     
