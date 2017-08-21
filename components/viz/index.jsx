@@ -134,7 +134,6 @@ export default class Viz extends Component {
 
 
   render() {
-    console.log(this.state)
     let showAbout = this.state.about ? {display: "flex"} : {display: "none"};
 
     return <div id='container' className='container'>
@@ -142,7 +141,8 @@ export default class Viz extends Component {
           <div className='title'>tnt</div>
           <a className='descrip' onClick={this.spinIt}>about</a>
           <a className='descrip'>vimeo</a>
-          <a className='descrip' href="https://www.instagram.com/disconeighbor/" >instagram</a>
+          <a className='descrip' href="https://www.instagram.com/disconeighbor/" target="_blank">instagram</a>
+          <a className='descrip'>contact</a>
         </div>
         <div className='about' style={showAbout}>
           Interactive Digital Artists.
