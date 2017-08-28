@@ -39,10 +39,15 @@
     font-family: 'Cutive Mono';
     position: absolute;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
     font-size: 1.5vw;
     padding-top: 15%;
     width: 100%;
     height: 10%;
     align-self: center;
+}
+
+.container .about .deet{
 }

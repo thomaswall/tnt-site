@@ -24,7 +24,8 @@ export default class Viz extends Component {
   constructor(props) {
       super(props);
       this.state = {
-        about: false
+        about: false,
+        contact: false
       }
   }
 
@@ -125,27 +126,43 @@ export default class Viz extends Component {
     window.addEventListener('touchstart', this.onMove);
   }
 
-  spinIt = () => {
-    spinTime = Date.now();
-    origRot = mesh.rotation.y;
+  aboutIt = () => {
     this.state.about = !this.state.about;
+    if(this.state.about)
+      this.state.contact = false;
+    this.setState(this.state);
+  }
+
+  contactIt = () => {
+    this.state.contact = !this.state.contact;
+    if(this.state.contact)
+      this.state.about = false;
     this.setState(this.state);
   }
 
 
   render() {
     let showAbout = this.state.about ? {display: "flex"} : {display: "none"};
+    let showContact = this.state.contact ? {display: "flex"} : {display: "none"};
 
     return <div id='container' className='container'>
         <div className='info'>
           <div className='title'>tnt</div>
-          <a className='descrip' onClick={this.spinIt}>about</a>
-          <a className='descrip'>vimeo</a>
+          <a className='descrip' onClick={this.aboutIt}>about</a>
+          <a className='descrip' href="https://vimeo.com/user65188480" target="_blank">vimeo</a>
           <a className='descrip' href="https://www.instagram.com/disconeighbor/" target="_blank">instagram</a>
-          <a className='descrip'>contact</a>
+          <a className='descrip' onClick={this.contactIt}>contact</a>
         </div>
         <div className='about' style={showAbout}>
-          Interactive Digital Artists.
+          <div className='deet'>
+            Tom Wall & Taimur Shah
+          </div>
+          <div className='deet'>
+            Interactive Digital Artists.
+          </div>
+        </div>
+        <div className='about' style={showContact}>
+          thomasjwall1@gmail.com
         </div>
       </div>;
   }
