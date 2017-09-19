@@ -150,7 +150,8 @@ export default class Viz extends Component {
           <div className='title'>ytoi</div>
           <a className='descrip' onClick={this.aboutIt}>about</a>
           <a className='descrip' href="https://vimeo.com/user65188480" target="_blank">vimeo</a>
-          <a className='descrip' href="https://www.instagram.com/disconeighbor/" target="_blank">instagram</a>
+          <a className='descrip' href="https://www.instagram.com/disconeighbor/" target="_blank">disconeighbor</a>
+          <a className='descrip' href="https://www.instagram.com/taimur38/" target="_blank">taimur38</a>
           <a className='descrip' onClick={this.contactIt}>contact</a>
         </div>
         <div className='about' style={showAbout}>
