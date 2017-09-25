@@ -163,7 +163,7 @@ export default class Viz extends Component {
           </div>
         </div>
         <div className='about' style={showContact}>
-          thomasjwall1@gmail.com
+            hi@ytoi.io
         </div>
       </div>;
   }
